@@ -1,0 +1,15 @@
+<svg width="180" height="38" viewBox="0 0 180 38" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .text { font-family: Arial, sans-serif; font-weight: bold; }
+    .ai { fill: #0072f5; }
+    .fshop { fill: #333333; }
+    .dark-mode .fshop { fill: #ffffff; }
+  </style>
+  <text x="10" y="28" class="text ai" font-size="28">AI</text>
+  <text x="44" y="28" class="text fshop" font-size="28">FSHOP</text>
+  <path d="M160,10 C165.5,10 170,14.5 170,20 C170,25.5 165.5,30 160,30 L146,30 L146,10 L160,10 Z" fill="#0072f5"/>
+  <path d="M149,15 L158,15 L158,17 L149,17 L149,15 Z" fill="white"/>
+  <path d="M149,19 L158,19 L158,21 L149,21 L149,19 Z" fill="white"/>
+  <path d="M149,23 L158,23 L158,25 L149,25 L149,23 Z" fill="white"/>
+  <path d="M158,23 L158,30 C158,30 162,29 163,25 C163.5,23 161,23 158,23 Z" fill="#0072f5"/>
+</svg>

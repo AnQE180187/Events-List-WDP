@@ -8,16 +8,17 @@ const ProductDetailPage = () => {
         name: 'Áo Thun Thời Trang Unisex',
         price: 250000,
         description: 'Một chiếc áo thun cotton 100% chất lượng cao, thoáng mát, phù hợp cho mọi hoạt động hàng ngày. Mua Ngay!',
-        image: 'https://via.placeholder.com/400'
+        image: 'https://via.placeholder.com/400',
+        sizes: ['S', 'M', 'L', 'XL'],
+        colors: ['Trắng', 'Đen', 'Xanh']
     });
+
+    const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
+    const [selectedColor, setSelectedColor] = useState(product.colors[0]);
 
     // Hàm xử lý khi click nút "Add to Cart"
     const handleAddToCart = () => {
-        // Yêu cầu 1: Hiển thị alert mock
-        alert(`Đã thêm "${product.name}" vào giỏ hàng!`);
-        
-        // Logic thực tế: Thêm sản phẩm vào giỏ hàng bằng cách cập nhật state hoặc context
-        // Ví dụ: addToCart(product);
+        alert(`Đã thêm "${product.name}" (${selectedSize}, ${selectedColor}) vào giỏ hàng!`);
     };
 
     return (
@@ -29,6 +30,24 @@ const ProductDetailPage = () => {
                 <h1 className="product-title">{product.name}</h1>
                 <p className="product-price">{product.price.toLocaleString('vi-VN')} VNĐ</p>
                 <p className="product-description">{product.description}</p>
+                <div className="product-options">
+                    <div>
+                        <label>Size: </label>
+                        <select value={selectedSize} onChange={e => setSelectedSize(e.target.value)}>
+                            {product.sizes.map(size => (
+                                <option key={size} value={size}>{size}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label>Màu: </label>
+                        <select value={selectedColor} onChange={e => setSelectedColor(e.target.value)}>
+                            {product.colors.map(color => (
+                                <option key={color} value={color}>{color}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
                 <button onClick={handleAddToCart} className="add-to-cart-btn">
                     Thêm vào giỏ hàng
                 </button>

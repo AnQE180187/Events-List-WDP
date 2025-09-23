@@ -7,7 +7,7 @@ const ProductDetailPage = () => {
         id: 'prd001',
         name: 'Áo Thun Thời Trang Unisex',
         price: 250000,
-        description: 'Một chiếc áo thun cotton 100% chất lượng cao, thoáng mát, phù hợp cho mọi hoạt động hàng ngày.',
+        description: 'Một chiếc áo thun cotton 100% chất lượng cao, thoáng mát, phù hợp cho mọi hoạt động hàng ngày. Mua Ngay!',
         image: 'https://via.placeholder.com/400'
     });
 

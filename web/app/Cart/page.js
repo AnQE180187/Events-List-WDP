@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import './CartPage.css';
+'use client';
 
-const CartPage = () => {
-    // Yêu cầu 2: Dữ liệu giỏ hàng mock
+import CartPage from './CartPage';
+
+export default function Page() {
+    return <CartPage />;
     const [cartItems, setCartItems] = useState([
         { id: 'prd001', name: 'Áo Thun Thời Trang Unisex', price: 250000, quantity: 2 },
         { id: 'prd002', name: 'Quần Jeans Slim Fit', price: 500000, quantity: 1 },
     ]);
 
-    // Yêu cầu 3: Tính tổng giá trị giỏ hàng
     const [total, setTotal] = useState(0);
 
-    // useEffect sẽ chạy mỗi khi `cartItems` thay đổi
     useEffect(() => {
         const newTotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
         setTotal(newTotal);
@@ -46,6 +45,4 @@ const CartPage = () => {
             </div>
         </div>
     );
-};
-
-export default CartPage;
+}

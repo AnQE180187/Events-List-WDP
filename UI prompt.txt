@@ -1,0 +1,56 @@
+Bạn là một AI UI/UX Developer.  
+Hãy thiết kế và sinh code giao diện web e-commerce "AI-Powered Online Fashion Shopping" bằng **React (JavaScript) + Next.js + Tailwind CSS**.  
+
+### Mục tiêu:
+- Tạo giao diện frontend với các page, component, modal, card đầy đủ để hỗ trợ các tính năng chính:  
+  1. Đăng ký / Đăng nhập (Email, Google, Facebook, OTP).  
+  2. Hồ sơ người dùng & quản lý địa chỉ.  
+  3. Khám phá sản phẩm: danh mục, tìm kiếm, lọc (size, màu, chất liệu, giá), sắp xếp.  
+  4. Chi tiết sản phẩm & chọn biến thể (size, màu).  
+  5. Giỏ hàng & Thanh toán (voucher, phí ship, thuế).  
+  6. Thanh toán qua Stripe/VNPay/MoMo.  
+  7. Theo dõi đơn hàng (timeline, ETA, trạng thái vận chuyển).  
+  8. Preorder & Yêu cầu báo giá cho sản phẩm hết hàng.  
+  9. Trợ lý AI (chat widget nổi) để hỏi sản phẩm, gợi ý, trạng thái đơn.  
+  10. Vendor Dashboard (quản lý sản phẩm, đơn hàng, tồn kho, báo cáo).  
+  11. Admin Console (quản lý user, vendor, sản phẩm, moderation, audit log).  
+
+### Yêu cầu UI:
+- **Màu chủ đạo**:  
+  - Xanh rêu: #8D8741  
+  - Xanh trời: #659DBD  
+  - Vàng đất: #DAAD86  
+  - Nâu nhạt: #BC986A  
+  - Kem nhạt: #FBEEC1  
+
+- **Phong cách giao diện**:  
+  - Cảm giác dễ chịu như bầu trời xanh và khung cảnh thiên nhiên.  
+  - Gần gũi, thoải mái, gợi ý tính bền vững và thân thiện môi trường.  
+  - Layout hiện đại, thoáng, responsive (desktop, tablet, mobile).  
+
+### Thành phần UI cần có:
+- **Layout chung**: Header (logo, menu, search, icon AI chat, giỏ hàng), Footer (links, social, newsletter).  
+- **Common components**: Button, Input, Select, Card, Modal, Toast/Notification, Pagination.  
+- **Product UI**: ProductCard, FilterSidebar, SearchBar, VariantSelector, ImageCarousel.  
+- **Cart & Checkout**: CartItem, CartSummary, PromoCodeForm, PaymentMethodSelector, ShippingMethodSelector.  
+- **Orders**: OrderCard, OrderTimeline, ReorderButton.  
+- **Preorders/Quotes**: PreorderForm, QuoteForm, PreorderCard.  
+- **AI Assistant**: ChatWidget, MessageBubble, RecommendationCard.  
+- **Vendor Dashboard**: VendorSidebar, ProductForm, OrderTable, InventoryCard, RevenueChart.  
+- **Admin Console**: AdminSidebar, UserTable, VendorTable, ModerationQueue, AuditLogTable.  
+
+### Yêu cầu kỹ thuật:
+- Code bằng **React + JavaScript** (không TypeScript).  
+- Sử dụng **Next.js + Tailwind CSS**.  
+- Component phải **tái sử dụng** được.  
+- Tổ chức thư mục rõ ràng, ví dụ:  
+  - `/components/common`  
+  - `/components/products`  
+  - `/components/cart`  
+  - `/components/orders`  
+  - `/components/ai`  
+  - `/components/vendor`  
+  - `/components/admin`  
+  - `/pages/...`  
+
+Hãy sinh ra code UI hoàn chỉnh (component + page) có thể copy-paste trực tiếp vào dự án Next.js.

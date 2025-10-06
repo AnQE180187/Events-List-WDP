@@ -7,7 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 // import { EventsModule } from './events/events.module';
 import { RegistrationsModule } from './registrations/registrations.module';
-// import { FavoritesModule } from './favorites/favorites.module';
+import { FavoritesModule } from './favorites/favorites.module';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
 // import { ReportsModule } from './reports/reports.module';
@@ -23,7 +23,7 @@ import { CommentsModule } from './comments/comments.module';
     UsersModule,
     // EventsModule,
     RegistrationsModule,
-    // FavoritesModule,
+    FavoritesModule,
     PostsModule,
     CommentsModule,
     // ReportsModule,

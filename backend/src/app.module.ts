@@ -8,7 +8,7 @@ import { UsersModule } from './users/users.module';
 // import { EventsModule } from './events/events.module';
 import { RegistrationsModule } from './registrations/registrations.module';
 // import { FavoritesModule } from './favorites/favorites.module';
-// import { PostsModule } from './posts/posts.module';
+import { PostsModule } from './posts/posts.module';
 // import { CommentsModule } from './comments/comments.module';
 // import { ReportsModule } from './reports/reports.module';
 // import { AuditLogsModule } from './audit-logs/audit-logs.module';
@@ -24,7 +24,7 @@ import { RegistrationsModule } from './registrations/registrations.module';
     // EventsModule,
    RegistrationsModule,
     // FavoritesModule,
-    // PostsModule,
+   PostsModule,
     // CommentsModule,
     // ReportsModule,
     // AuditLogsModule,

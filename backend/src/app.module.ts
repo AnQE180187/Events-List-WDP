@@ -9,7 +9,7 @@ import { UsersModule } from './users/users.module';
 import { RegistrationsModule } from './registrations/registrations.module';
 // import { FavoritesModule } from './favorites/favorites.module';
 import { PostsModule } from './posts/posts.module';
-// import { CommentsModule } from './comments/comments.module';
+import { CommentsModule } from './comments/comments.module';
 // import { ReportsModule } from './reports/reports.module';
 // import { AuditLogsModule } from './audit-logs/audit-logs.module';
 // import { UploadModule } from './upload/upload.module';
@@ -22,10 +22,10 @@ import { PostsModule } from './posts/posts.module';
     PrismaModule,
     UsersModule,
     // EventsModule,
-   RegistrationsModule,
+    RegistrationsModule,
     // FavoritesModule,
-   PostsModule,
-    // CommentsModule,
+    PostsModule,
+    CommentsModule,
     // ReportsModule,
     // AuditLogsModule,
     // UploadModule,

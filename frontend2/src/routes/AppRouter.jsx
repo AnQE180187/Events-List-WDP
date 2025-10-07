@@ -21,7 +21,7 @@ import ProfilePage from '../pages/ProfilePage';
 // import EventDetailPage from '../pages/EventDetailPage';
 
 // Forum Pages
-// import ForumPage from '../pages/ForumPage';
+import ForumPage from '../pages/ForumPage';
 // import EventManagerPage from '../pages/EventManagerPage';
 // import OrganizerPricingPage from '../pages/OrganizerPricingPage';
 // import OrganizerPaymentPage from '../pages/OrganizerPaymentPage';
@@ -38,7 +38,7 @@ const router = createBrowserRouter([
       // { path: 'about', element: <AboutPage /> },
       // { path: 'events', element: <EventsPage /> },
       // { path: 'events/:id', element: <EventDetailPage /> },
-      // { path: 'forum', element: <ForumPage /> },
+      { path: 'forum', element: <ForumPage /> },
 
       // Protected Routes
       {

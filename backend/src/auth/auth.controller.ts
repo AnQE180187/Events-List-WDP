@@ -21,13 +21,6 @@ export class AuthController {
     return this.authService.login(loginUserDto);
   }
 
-  @Post('reset-password')
-  @HttpCode(HttpStatus.OK)
-  resetPassword(@Body() body: ResetPasswordDto) {
-    return this.authService.resetPassword(body.token, body.password);
-  }
-
-
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))

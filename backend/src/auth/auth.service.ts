@@ -6,8 +6,6 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import * as bcrypt from 'bcryptjs';
 import { Prisma } from '@prisma/client';
-import { randomBytes, createHash } from 'crypto';
-import { MailService } from 'src/common/mail.service';
 
 @Injectable()
 export class AuthService {

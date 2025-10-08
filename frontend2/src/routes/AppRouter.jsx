@@ -8,6 +8,7 @@ import MainLayout from '../layouts/MainLayout';
 import ProtectedRoute from './ProtectedRoute';
 
 // Pages
+import ChangePasswordPage from '../pages/ChangePasswordPage';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
       {
         path: 'profile',
         element: <ProtectedRoute><ProfilePage /></ProtectedRoute>,
+      },
+            {
+        path: 'change-password',
+        element: <ProtectedRoute><ChangePasswordPage /></ProtectedRoute>,
       },
       // {
       //   path: 'my-events',

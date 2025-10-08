@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model User {
@@ -23,12 +24,15 @@ model User {
   organizedEvents Event[]         @relation("OrganizerEvents")
   favorites       Favorite[]
   notifications   Notification[]
+  passwordResets  PasswordReset[]
   posts           Post[]
   profile         Profile?
   registrations   Registration[]
   reports         Report[]
   transactions    Transaction[]
-  passwordResets  PasswordReset[]
+  sentMessages    Message[]
+  participantConversations Conversation[] @relation("ParticipantConversations")
+  organizerConversations   Conversation[] @relation("OrganizerConversations")
 
   @@unique([provider, providerId])
   @@map("users")
@@ -75,17 +79,36 @@ model Event {
   favorites       Favorite[]
   registrations   Registration[]
   reports         Report[]        @relation("ReportedEvent")
+  conversations   Conversation[]
 
   @@map("events")
 }
+
 
 model Tag {
   id     String     @id @default(uuid())
   name   String     @unique
   events EventTag[]
-  posts  PostTag[]
 
   @@map("tags")
+}
+
+model ForumTag {
+  id   String  @id @default(uuid())
+  name String  @unique
+  posts PostForumTag[]
+
+  @@map("forum_tags")
+}
+
+model PostForumTag {
+  postId String @map("post_id")
+  tagId  String @map("tag_id")
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    ForumTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_forum_tags")
 }
 
 model EventTag {
@@ -122,6 +145,7 @@ model Favorite {
   @@map("favorites")
 }
 
+
 model Post {
   id        String           @id @default(uuid())
   authorId  String           @map("author_id")
@@ -131,22 +155,15 @@ model Post {
   createdAt DateTime         @default(now()) @map("created_at")
   updatedAt DateTime         @updatedAt @map("updated_at")
   comments  Comment[]
-  tags      PostTag[]
+  forumTags PostForumTag[]
   author    User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
   reports   Report[]         @relation("ReportedPost")
 
   @@map("posts")
 }
 
-model PostTag {
-  postId String @map("post_id")
-  tagId  String @map("tag_id")
-  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-  @@id([postId, tagId])
-  @@map("post_tags")
-}
+// Xóa PostTag vì đã tách tag cho forum
 
 model Comment {
   id        String           @id @default(uuid())
@@ -233,6 +250,52 @@ model Transaction {
   @@map("transactions")
 }
 
+model PasswordReset {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  tokenHash    String?   @unique @map("token_hash")
+  expiresAt    DateTime? @map("expires_at")
+  otpHash      String?   @map("otp_hash")
+  otpExpiresAt DateTime? @map("otp_expires_at")
+  verifiedAt   DateTime? @map("verified_at")
+  usedAt       DateTime? @map("used_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_resets")
+}
+
+model Conversation {
+  id            String    @id @default(uuid())
+  eventId       String
+  participantId String
+  organizerId   String
+  messages      Message[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  event       Event @relation(fields: [eventId], references: [id])
+  participant User  @relation("ParticipantConversations", fields: [participantId], references: [id])
+  organizer   User  @relation("OrganizerConversations", fields: [organizerId], references: [id])
+
+  @@unique([eventId, participantId, organizerId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String
+  createdAt      DateTime     @default(now())
+  isRead         Boolean      @default(false)
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  sender         User         @relation(fields: [senderId], references: [id])
+
+  @@map("messages")
+}
+
 enum Role {
   PARTICIPANT
   ORGANIZER
@@ -279,21 +342,4 @@ enum TransactionStatus {
   PENDING
   COMPLETED
   FAILED
-}
-
-model PasswordReset {
-  id         String   @id @default(uuid())
-  userId     String   @map("user_id")
-  tokenHash  String?  @map("token_hash")
-  expiresAt  DateTime? @map("expires_at")
-  otpHash    String?  @map("otp_hash")
-  otpExpiresAt DateTime? @map("otp_expires_at")
-  verifiedAt DateTime? @map("verified_at")
-  usedAt     DateTime? @map("used_at")
-  createdAt  DateTime @default(now()) @map("created_at")
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@unique([tokenHash])
-  @@map("password_resets")
 }

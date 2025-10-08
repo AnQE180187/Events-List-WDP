@@ -26,6 +26,19 @@ export const logout = () => {
     localStorage.removeItem('token');
 };
 
+
+export const changePassword = async ({ currentPassword, newPassword }) => {
+  try {
+    const response = await api.post('/auth/change-password', { 
+      currentPassword, 
+      newPassword 
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || 'Đã có lỗi xảy ra';
+  }
+
+
 // export const forgotPassword = async (email) => {
 //   try {
 //     const response = await api.post('/auth/forgot-password', { email });

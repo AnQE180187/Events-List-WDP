@@ -18,10 +18,24 @@ const LoginPage = () => {
     setIsLoading(true);
     setApiError(null);
     try {
-      await login(data);
-      navigate('/');
+      const user = await login(data);
+      if (user && user.role.toLowerCase() === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (error) {
-      setApiError(error.message || 'Đăng nhập thất bại.');
+      const status = error?.response?.status;
+      const backendMessage = error?.response?.data?.message;
+      if (status === 401) {
+        setApiError('Sai email hoặc mật khẩu');
+      } else if (typeof backendMessage === 'string') {
+        setApiError(backendMessage);
+      } else if (Array.isArray(backendMessage)) {
+        setApiError(backendMessage.join(', '));
+      } else {
+        setApiError('Đăng nhập thất bại. Vui lòng thử lại.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -59,6 +73,9 @@ const LoginPage = () => {
           </button>
           <p className="login-link">
             Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
+          </p>
+          <p className="login-link">
+            Quên mật khẩu? <Link to="/forgot-password">Khôi phục ngay</Link>
           </p>
         </form>
       </div>

@@ -1,18 +1,17 @@
 import React from 'react';
-import EventForm from './EventForm';
+import PostForm from './PostForm';
 import { X } from 'lucide-react';
-import './Modal.css'; // Generic modal styles
+import './Modal.css'; // Re-use generic modal styles
 
-const EventModal = ({ isOpen, onClose, onComplete, initialData }) => {
+const PostModal = ({ isOpen, onClose, onComplete, initialData }) => {
   if (!isOpen) return null;
 
   const mode = initialData ? 'edit' : 'create';
-  const title = mode === 'edit' ? 'Chỉnh sửa sự kiện' : 'Tạo sự kiện mới';
+  const title = mode === 'edit' ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới';
 
   const handleSubmit = async (data) => {
-    // The onSubmit logic will be passed from the parent
     await onComplete(data, initialData?.id);
-    onClose(); // Close modal on success
+    onClose();
   };
 
   return (
@@ -23,10 +22,11 @@ const EventModal = ({ isOpen, onClose, onComplete, initialData }) => {
           <button onClick={onClose} className="modal-close-btn"><X size={24} /></button>
         </div>
         <div className="modal-content">
-          <EventForm 
+          <PostForm 
             initialData={initialData}
             onSubmit={handleSubmit}
-            submitButtonText={mode === 'edit' ? 'Lưu thay đổi' : 'Tạo sự kiện'}
+            isSubmitting={false} // Parent component will handle submitting state
+            submitButtonText={mode === 'edit' ? 'Lưu thay đổi' : 'Đăng bài'}
           />
         </div>
       </div>
@@ -34,4 +34,4 @@ const EventModal = ({ isOpen, onClose, onComplete, initialData }) => {
   );
 };
 
-export default EventModal;
+export default PostModal;

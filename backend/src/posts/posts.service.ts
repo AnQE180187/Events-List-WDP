@@ -9,29 +9,39 @@ export class PostsService {
   constructor(private prisma: PrismaService) { }
 
   async create(createPostDto: CreatePostDto, author: User) {
-    const { tags, ...postData } = createPostDto;
-    return this.prisma.post.create({
+    const { forumTags, ...postData } = createPostDto;
+    // Tạo post trước
+    const post = await this.prisma.post.create({
       data: {
         ...postData,
         authorId: author.id,
-        tags: {
-          create: tags?.map((tagName) => ({
-            tag: {
-              connectOrCreate: {
-                where: { name: tagName },
-                create: { name: tagName },
-              },
-            },
-          })),
-        },
       },
-      include: { tags: { select: { tag: true } } },
     });
-  }
 
-  findAll() {
-    return this.prisma.post.findMany({
-      where: { status: VisibilityStatus.VISIBLE },
+    // Gán tag cho post
+    if (forumTags && forumTags.length > 0) {
+      await Promise.all(
+        forumTags.map(async (tagName) => {
+          // Tìm hoặc tạo ForumTag
+          const forumTag = await this.prisma.forumTag.upsert({
+            where: { name: tagName },
+            update: {},
+            create: { name: tagName },
+          });
+          // Tạo liên kết PostForumTag
+          await this.prisma.postForumTag.create({
+            data: {
+              postId: post.id,
+              tagId: forumTag.id,
+            },
+          });
+        })
+      );
+    }
+
+    // Trả về post kèm tag liên kết
+    return this.prisma.post.findUnique({
+      where: { id: post.id },
       include: {
         author: {
           select: {
@@ -41,11 +51,42 @@ export class PostsService {
               select: {
                 displayName: true,
                 avatarUrl: true,
-              }
-            }
-          }
+              },
+            },
+          },
         },
-        tags: { select: { tag: true } },
+          forumTags: { select: { tag: true } },
+      },
+    });
+  }
+
+  findAll(tag?: string) {
+    const where: any = { status: VisibilityStatus.VISIBLE };
+    if (tag) {
+      where.forumTags = {
+        some: {
+          tag: {
+            name: tag,
+          },
+        },
+      };
+    }
+    return this.prisma.post.findMany({
+      where,
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: {
+                displayName: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+        forumTags: { select: { tag: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -67,7 +108,7 @@ export class PostsService {
             },
           },
         },
-        tags: { select: { tag: true } },
+          forumTags: { select: { tag: true } },
         comments: {
           include: {
             author: {
@@ -101,27 +142,58 @@ export class PostsService {
       throw new NotFoundException(`Post with ID "${id}" not found`); // Or ForbiddenException
     }
 
-    const { tags, ...postData } = updatePostDto;
+    const { forumTags, ...postData } = updatePostDto;
 
-    return this.prisma.post.update({
+    // Cập nhật post
+    const updatedPost = await this.prisma.post.update({
       where: { id },
       data: {
         ...postData,
-        tags: tags
-          ? {
-            deleteMany: {}, // Xoá tất cả tags cũ
-            create: tags.map((tagName) => ({
-              tag: {
-                connectOrCreate: {
-                  where: { name: tagName },
-                  create: { name: tagName },
-                },
-              },
-            })),
-          }
-          : undefined,
       },
-      include: { tags: { select: { tag: true } } },
+    });
+
+    // Xoá tất cả liên kết tag cũ
+  await this.prisma.postForumTag.deleteMany({ where: { postId: id } });
+
+    // Tạo lại liên kết tag mới
+    if (forumTags && forumTags.length > 0) {
+      await Promise.all(
+        forumTags.map(async (tagName) => {
+          // Tìm hoặc tạo ForumTag
+          const forumTag = await this.prisma.forumTag.upsert({
+            where: { name: tagName },
+            update: {},
+            create: { name: tagName },
+          });
+          // Tạo liên kết PostForumTag
+          await this.prisma.postForumTag.create({
+            data: {
+              postId: id,
+              tagId: forumTag.id,
+            },
+          });
+        })
+      );
+    }
+
+    // Trả về post kèm tag liên kết
+    return this.prisma.post.findUnique({
+      where: { id },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: {
+                displayName: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+          forumTags: { select: { tag: true } },
+      },
     });
   }
 

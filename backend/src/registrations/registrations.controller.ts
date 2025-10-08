@@ -1,12 +1,13 @@
 import { Controller, Post, Body, UseGuards, Req, Delete, Param, HttpCode, HttpStatus, Get } from '@nestjs/common';
-import { RegistrationService } from './registrations.service';
+import { RegistrationsService } from './registrations.service';
+import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { User } from '@prisma/client';
 
 @Controller('events/:eventId/registration')
 export class RegistrationsController {
-  constructor(private readonly registrationsService: RegistrationService) {}
+  constructor(private readonly registrationsService: RegistrationsService) {}
 
   @Get()
   @UseGuards(AuthGuard('jwt'))

@@ -15,7 +15,7 @@ import {
 import { TransactionsService } from './transactions.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
-import { User } from '@prisma/client';
+import { User, Role } from '@prisma/client';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -26,15 +26,15 @@ export class TransactionsController {
 
   @Get()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('Admin')
+  @Roles(Role.ADMIN)
   findAll() {
     return this.transactionsService.findAll();
   }
 
   @Patch(':id/confirm')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('Admin')
-  manuallyConfirmTransaction(@Param('id', ParseIntPipe) id: number) {
+  @Roles(Role.ADMIN)
+  manuallyConfirmTransaction(@Param('id') id: string) {
     return this.transactionsService.manuallyConfirmTransaction(id);
   }
 

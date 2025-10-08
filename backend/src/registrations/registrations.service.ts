@@ -1,27 +1,27 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
-import {User, RegistrationStatus, EventStatus} from '@prisma/client';
+import { User, EventStatus, RegistrationStatus } from '@prisma/client';
 
 @Injectable()
-export class RegistrationService{
-    constructor(private prisma: PrismaService) {}
+export class RegistrationsService {
+  constructor(private prisma: PrismaService) {}
 
-    async getRegistrationStatus(eventId: string, user: User) {
-        const registration = await this.prisma.registration.findUnique({
-            where: { eventId_userId: { eventId, userId: user.id } },
-            select: { status: true, createdAt: true }
-        });
+  async getRegistrationStatus(eventId: string, user: User) {
+    const registration = await this.prisma.registration.findUnique({
+      where: { eventId_userId: { eventId, userId: user.id } },
+      select: { status: true, createdAt: true }
+    });
 
-        return {
-          isRegistered: !!registration,
-          status: registration?.status || null,
-          registeredAt: registration?.createdAt || null
-        };
-    }
+    return {
+      isRegistered: !!registration,
+      status: registration?.status || null,
+      registeredAt: registration?.createdAt || null
+    };
+  }
 
-    async create(createRegistrationDto: CreateRegistrationDto, user: User) {
-         const { eventId } = createRegistrationDto;
+  async create(createRegistrationDto: CreateRegistrationDto, user: User) {
+    const { eventId } = createRegistrationDto;
 
     return this.prisma.$transaction(async (tx) => {
       const event = await tx.event.findUnique({
@@ -56,10 +56,10 @@ export class RegistrationService{
       });
 
       return registration;
-     });
-    }
+    });
+  }
 
-    async confirmDeposit(eventId: string, user: User) {
+  async confirmDeposit(eventId: string, user: User) {
     const registration = await this.prisma.registration.findUnique({
         where: {
             eventId_userId: {
@@ -86,8 +86,9 @@ export class RegistrationService{
         },
     });
   }
-    async remove(eventId: string, user: User) {
-     return this.prisma.$transaction(async (tx) => {
+
+  async remove(eventId: string, user: User) {
+    return this.prisma.$transaction(async (tx) => {
       const registration = await tx.registration.findUnique({
         where: {
           eventId_userId: {
@@ -120,5 +121,4 @@ export class RegistrationService{
       return { message: 'Registration cancelled successfully' };
     });
   }
-
 }

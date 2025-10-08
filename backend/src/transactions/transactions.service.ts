@@ -42,7 +42,7 @@ export class TransactionsService {
     });
   }
 
-  async manuallyConfirmTransaction(transactionId: number) {
+  async manuallyConfirmTransaction(transactionId: string) {
     const pendingTx = await this.prisma.transaction.findFirst({
       where: {
         id: transactionId,

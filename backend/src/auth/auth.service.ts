@@ -1,10 +1,13 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import * as bcrypt from 'bcryptjs';
 import { Prisma } from '@prisma/client';
+import { randomBytes, createHash } from 'crypto';
+import { MailService } from 'src/common/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +17,7 @@ export class AuthService {
   ) {}
 
   async register(registerUserDto: RegisterUserDto) {
-    const { email, password, displayName, dateOfBirth, gender, city, bio } = registerUserDto;
+    const { email, password, displayName, dateOfBirth, gender, city, bio, phone, address } = registerUserDto;
 
     const existingUser = await this.prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -34,6 +37,8 @@ export class AuthService {
             city,
             bio,
             dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+            phone: phone || null,
+            address: address || null,
           },
         },
       },
@@ -42,9 +47,13 @@ export class AuthService {
       },
     });
 
-    const payload = { email: user.email, sub: user.id, role: user.role };
     return {
-      accessToken: this.jwtService.sign(payload),
+      message: 'User registered successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        profile: user.profile
+      }
     };
   }
 
@@ -75,5 +84,32 @@ export class AuthService {
     // You might want to return a subset of the user object
     const { passwordHash, ...result } = user;
     return result;
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+    const { currentPassword, newPassword } = changePasswordDto;
+
+    // Get the current user
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.passwordHash) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException('Mật khẩu hiện tại không đúng');
+    }
+
+    // Hash the new password
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    // Update the password
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: newPasswordHash }
+    });
+
+    return { message: 'Đổi mật khẩu thành công' };
   }
 }

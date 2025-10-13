@@ -39,6 +39,7 @@ import TransactionManagementPage from '../admin/pages/TransactionManagementPage'
 import AdminEventManagementPage from '../admin/pages/AdminEventManagementPage';
 import ReportManagementPage from '../admin/pages/ReportManagementPage';
 import AuditLogsPage from '../admin/pages/AuditLogsPage';
+import PaymentManagementPage from '../admin/pages/PaymentManagementPage';
 import SettingsPage from '../admin/pages/SettingsPage';
 
 
@@ -112,6 +113,7 @@ const router = createBrowserRouter([
           { path: 'events', element: <AdminEventManagementPage /> },
           { path: 'reports', element: <ReportManagementPage /> },
           { path: 'audit-logs', element: <AuditLogsPage /> },
+          { path: 'payments', element: <PaymentManagementPage /> },
           { path: 'settings', element: <SettingsPage /> },
           // Add other admin pages here
         ],

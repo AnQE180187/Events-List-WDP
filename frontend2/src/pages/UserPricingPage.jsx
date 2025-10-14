@@ -1,45 +1,36 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
-import './OrganizerPricingPage.css';
+import './OrganizerPricingPage.css'; // Reuse the same CSS for consistent styling
 
-const OrganizerPricingPage = () => {
+const UserPricingPage = () => {
   const packages = [
     {
-      name: 'Gói Business Pro',
-      price: '150.000',
-      period: 'tháng',
-      features: [
-        'Ưu tiên hiển thị lên đầu( luôn nằm trong top )',
-
-      ],
-    },
-    {
       name: 'Gói Premium',
-      price: '250.000',
+      price: '39.000',
       period: 'tháng',
       popular: true,
       features: [
-        'Đăng nhiều sự kiện',
-        'Quảng bá trên fanpage',
-        'Ưu tiên hiển thị & xem dữ liệu khách hàng',
+        'Truy cập Chatbot AI (Beta)',
+        'Gợi ý sự kiện được cá nhân hóa',
+        'Huy hiệu "Người dùng VIP" trên hồ sơ',
       ],
-    }
+    },
 
   ];
 
   return (
     <div className="pricing-container">
       <div className="pricing-header">
-        <h1>Trở thành Nhà tổ chức</h1>
+        <h1>Nâng cấp trải nghiệm của bạn</h1>
         <p className="pricing-subtitle">
-          Chọn gói phù hợp với bạn và bắt đầu tạo sự kiện ngay hôm nay!
+          Mở khóa các tính năng độc quyền để tận hưởng FreeDay một cách trọn vẹn nhất.
         </p>
       </div>
       <div className="pricing-grid">
         {packages.map((pkg) => (
           <div key={pkg.name} className={`pricing-card ${pkg.popular ? 'popular' : ''}`}>
-
+            {pkg.popular && <div className="popular-badge">Phổ biến</div>}
             <div className="card-header">
               <h2>{pkg.name}</h2>
               <p className="price">
@@ -56,11 +47,11 @@ const OrganizerPricingPage = () => {
               ))}
             </ul>
             <Link
-              to="/organizer-payment"
+              to="/user-payment"
               state={{ package: { name: pkg.name, price: pkg.price, period: pkg.period } }}
               className="btn-subscribe"
             >
-              Đăng ký ngay
+              Chọn gói này
             </Link>
           </div>
         ))}
@@ -69,4 +60,4 @@ const OrganizerPricingPage = () => {
   );
 };
 
-export default OrganizerPricingPage;
+export default UserPricingPage;

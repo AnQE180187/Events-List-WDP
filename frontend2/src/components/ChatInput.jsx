@@ -9,7 +9,6 @@ const ChatInput = ({ onSendMessage }) => {
     if (content.trim()) {
       onSendMessage(content);
       setContent('');
-      // Không focus lại input sau khi gửi để tránh di chuyển màn hình
     }
   };
 

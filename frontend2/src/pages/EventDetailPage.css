@@ -294,6 +294,63 @@
   flex: 1;
 }
 
+/* Delete Button Specific Styles */
+.event-detail-page .sidebar-card__footer .button.button--ghost {
+  background: transparent !important;
+  color: #dc2626 !important;
+  border: 2px solid #dc2626 !important;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.event-detail-page .sidebar-card__footer .button.button--ghost:hover {
+  background: #dc2626 !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.event-detail-page .sidebar-card__footer .button.button--ghost:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.4);
+}
+
+.event-detail-page .sidebar-card__footer .button.button--ghost:disabled {
+  background: transparent !important;
+  color: #9ca3af !important;
+  border-color: #d1d5db !important;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.event-detail-page .sidebar-card__footer .button.button--ghost:disabled:hover {
+  background: transparent !important;
+  color: #9ca3af !important;
+  border-color: #d1d5db !important;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Loading Animation for Delete Button */
+.event-detail-page .sidebar-card__footer .button.button--ghost:disabled::after {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 8px;
+  border: 2px solid #9ca3af;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Mobile Responsive - Tablet */
 @media (max-width: 768px) {
   .event-detail-page {
@@ -412,6 +469,13 @@
     flex: none;
     min-height: 48px;
   }
+  
+  /* Mobile Delete Button Styles */
+  .sidebar-card__footer .button--ghost {
+    font-size: 0.9rem;
+    padding: 0.875rem 1rem;
+    border-width: 1.5px;
+  }
 }
 
 /* Mobile Responsive - Small Phones */
@@ -521,6 +585,13 @@
   .sidebar-card__footer .button {
     min-height: 44px;
     font-size: 0.85rem;
+  }
+  
+  /* Small Mobile Delete Button Styles */
+  .sidebar-card__footer .button--ghost {
+    font-size: 0.85rem;
+    padding: 0.75rem 0.875rem;
+    border-width: 1px;
   }
 }
 

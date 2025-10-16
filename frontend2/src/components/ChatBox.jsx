@@ -28,7 +28,18 @@ const ChatBox = ({ conversation, socket }) => {
 
     const messageReceiveHandler = (message) => {
       if (message.conversationId === conversation.id) {
-        setMessages((prevMessages) => [...prevMessages, message]);
+        setMessages((prevMessages) => {
+          // Nếu là tin nhắn từ chính mình, thay thế tin nhắn tạm thời
+          if (message.senderId === user.sub) {
+            return prevMessages.map(msg => 
+              msg.id.startsWith('temp-') && msg.senderId === user.sub 
+                ? message 
+                : msg
+            );
+          }
+          // Nếu là tin nhắn từ người khác, thêm vào cuối
+          return [...prevMessages, message];
+        });
       }
     };
 
@@ -40,10 +51,29 @@ const ChatBox = ({ conversation, socket }) => {
   }, [conversation, socket]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    // Chỉ auto-scroll khi có tin nhắn mới từ người khác
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.senderId !== user?.sub) {
+      // Sử dụng setTimeout để đảm bảo DOM đã được cập nhật
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [messages, user?.sub]);
 
   const handleSendMessage = (content) => {
+    // Thêm tin nhắn tạm thời vào danh sách để hiển thị ngay
+    const tempMessage = {
+      id: `temp-${Date.now()}`,
+      conversationId: conversation.id,
+      senderId: user.sub,
+      content,
+      createdAt: new Date().toISOString(),
+      isRead: false,
+    };
+    
+    setMessages(prevMessages => [...prevMessages, tempMessage]);
+    
     socket.emit('message.send', {
       conversationId: conversation.id,
       content,

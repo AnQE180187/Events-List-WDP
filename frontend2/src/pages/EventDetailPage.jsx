@@ -10,6 +10,7 @@ import Modal from '../components/ui/Modal';
 import EventModal from './EventModal';
 import DepositModal from './DepositModal';
 import './EventDetailPage.css';
+import MapEmbed from '../components/MapEmbed';
 
 const EventDetailPage = () => {
   const { id } = useParams();
@@ -187,6 +188,27 @@ const EventDetailPage = () => {
     }
   };
 
+  const handleAddToCalendar = () => {
+    if (!event) return;
+
+    const formatDateForGoogle = (date) => {
+      return new Date(date).toISOString().replace(/-|:|\.\\d{3}/g, '');
+    };
+
+    const startTime = formatDateForGoogle(event.startAt);
+    const endTime = event.endAt ? formatDateForGoogle(event.endAt) : startTime;
+
+    const calendarUrl = [
+      'https://www.google.com/calendar/render?action=TEMPLATE',
+      `&text=${encodeURIComponent(event.title)}`,
+      `&dates=${startTime}/${endTime}`,
+      `&details=${encodeURIComponent(event.description)}`,
+      `&location=${encodeURIComponent(event.locationText)}`,
+    ].join('');
+
+    window.open(calendarUrl, '_blank');
+  };
+
   if (loading) return <div className="loading-message">Đang tải...</div>;
   if (error) return <div className="error-message">{error}</div>;
   if (!event) return <div className="no-results">Không tìm thấy sự kiện.</div>;
@@ -266,6 +288,11 @@ const EventDetailPage = () => {
                 </button>
               )}
             </div>
+
+            {/* Google Map under organizer info (no API key) */}
+            <div className="detail-card" style={{ padding: 0, overflow: 'hidden' }}>
+              <MapEmbed lat={event.lat} lng={event.lng} />
+            </div>
           </main>
 
           <aside className="event-detail__sidebar">
@@ -315,6 +342,7 @@ const EventDetailPage = () => {
                       <>
                         <button className="button button--success" disabled>✓ Đã đặt cọc</button>
                         <Link to={`/events/${id}/ticket`} className="button button--secondary">Xem vé của tôi</Link>
+                        <button className="button add-to-calendar-button" onClick={handleAddToCalendar}>Thêm vào Lịch</button>
                         <button className="button button--ghost" onClick={handleCancelRegistration} disabled={loadingRegistration}>
                           {loadingRegistration ? 'Đang hủy...' : 'Hủy đặt cọc'}
                         </button>
@@ -322,6 +350,7 @@ const EventDetailPage = () => {
                     ) : (
                       <>
                         <button className="button button--success" disabled>✓ Đã đăng ký</button>
+                        <button className="button add-to-calendar-button" onClick={handleAddToCalendar}>Thêm vào Lịch</button>
                         <button className="button button--ghost" onClick={handleCancelRegistration} disabled={loadingRegistration}>
                           {loadingRegistration ? 'Đang hủy...' : 'Hủy đăng ký'}
                         </button>

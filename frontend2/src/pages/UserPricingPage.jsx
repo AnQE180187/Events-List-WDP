@@ -7,7 +7,7 @@ const UserPricingPage = () => {
   const packages = [
     {
       name: 'Gói Premium',
-      price: '4.000',
+      price: '39.000',
       period: 'tháng',
       popular: true,
       features: [

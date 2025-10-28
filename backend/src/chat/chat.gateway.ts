@@ -13,7 +13,7 @@ import { WsGuard } from '../auth/guards/ws.guard';
 
 @WebSocketGateway({
   cors: {
-    origin: ['https://freeday.onrender.com', 'http://localhost:5173'],
+    origin: ['https://wdp-frontend-9v5d.onrender.com', 'http://localhost:5173'],
   },
 })
 export class ChatGateway

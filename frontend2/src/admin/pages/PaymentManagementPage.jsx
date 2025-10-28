@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import './PaymentManagementPage.css';
+import './PaymentManagementPage.css'; // 👈 thêm dòng này
 
 const PaymentManagementPage = () => {
   const [activeTab, setActiveTab] = useState('withdrawals');

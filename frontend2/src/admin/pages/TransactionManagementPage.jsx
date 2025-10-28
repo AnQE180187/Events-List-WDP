@@ -44,7 +44,7 @@ const TransactionManagementPage = () => {
         setTransactions(mockTransactions);
 
       } catch (err) {
-        setError('Không thể tải danh sách giao dịch.');
+        setError('Failed to fetch transactions.');
         console.error(err);
       } finally {
         setLoading(false);
@@ -54,21 +54,21 @@ const TransactionManagementPage = () => {
     fetchTransactions();
   }, []);
 
-  if (loading) return <div>Đang tải giao dịch...</div>;
+  if (loading) return <div>Loading transactions...</div>;
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
   return (
     <div>
-      <h1>Quản Lý Giao Dịch</h1>
+      <h1>Transaction Management</h1>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ borderBottom: '1px solid #ddd' }}>
-            <th style={{ padding: '8px', textAlign: 'left' }}>ID Giao Dịch</th>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Người Dùng</th>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Số Tiền</th>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Loại</th>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Trạng Thái</th>
-            <th style={{ padding: '8px', textAlign: 'left' }}>Ngày</th>
+            <th style={{ padding: '8px', textAlign: 'left' }}>Transaction ID</th>
+            <th style={{ padding: '8px', textAlign: 'left' }}>User</th>
+            <th style={{ padding: '8px', textAlign: 'left' }}>Amount</th>
+            <th style={{ padding: '8px', textAlign: 'left' }}>Type</th>
+            <th style={{ padding: '8px', textAlign: 'left' }}>Status</th>
+            <th style={{ padding: '8px', textAlign: 'left' }}>Date</th>
           </tr>
         </thead>
         <tbody>

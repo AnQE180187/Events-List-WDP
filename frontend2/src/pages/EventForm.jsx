@@ -5,13 +5,16 @@ import * as z from 'zod';
 import { getCloudinarySignature, uploadImage } from '../services/uploadService';
 
 import './EventForm.css';
+import MapEmbed from '../components/MapEmbed';
 
 // Validation schema using Zod
 const eventSchema = z.object({
   title: z.string().min(3, 'Tên sự kiện phải có ít nhất 3 ký tự'),
   description: z.string().min(10, 'Mô tả phải có ít nhất 10 ký tự'),
   locationText: z.string().min(5, 'Địa điểm là bắt buộc'),
-  startAt: z.string().refine(val => new Date(val) > new Date(), 'Thời gian bắt đầu phải ở tương lai'),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+  startAt: z.string()/*.refine(val => new Date(val) > new Date(), 'Thời gian bắt đầu phải ở tương lai')*/,
   endAt: z.string(),
   price: z.preprocess(
     a => parseFloat(String(a)),
@@ -33,21 +36,21 @@ const EventForm = ({ initialData, onSubmit, isSubmitting, submitButtonText = 'Su
   const [imagePreview, setImagePreview] = useState(initialData?.imageUrl || null);
   const [uploadError, setUploadError] = useState(null);
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm({
     resolver: zodResolver(eventSchema),
     defaultValues: { status: 'DRAFT', price: 0, capacity: 10, tags: '' },
   });
 
   useEffect(() => {
     if (initialData) {
-        const tagsString = initialData.tags?.map(t => t.tag.name).join(', ') || '';
-        reset({
-            ...initialData,
-            startAt: initialData.startAt ? new Date(initialData.startAt).toISOString().slice(0, 16) : '',
-            endAt: initialData.endAt ? new Date(initialData.endAt).toISOString().slice(0, 16) : '',
-            tags: tagsString,
-        });
-        setImagePreview(initialData.imageUrl);
+      const tagsString = initialData.tags?.map(t => t.tag.name).join(', ') || '';
+      reset({
+        ...initialData,
+        startAt: initialData.startAt ? new Date(initialData.startAt).toISOString().slice(0, 16) : '',
+        endAt: initialData.endAt ? new Date(initialData.endAt).toISOString().slice(0, 16) : '',
+        tags: tagsString,
+      });
+      setImagePreview(initialData.imageUrl);
     }
   }, [initialData, reset]);
 
@@ -59,15 +62,30 @@ const EventForm = ({ initialData, onSubmit, isSubmitting, submitButtonText = 'Su
     }
   };
 
+  // Map helpers
+  const lat = watch('lat');
+  const lng = watch('lng');
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) return alert('Trình duyệt không hỗ trợ định vị.');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setValue('lat', latitude);
+        setValue('lng', longitude);
+      },
+      () => alert('Không lấy được vị trí hiện tại.')
+    );
+  };
+
   const handleFormSubmit = async (data) => {
     let finalData = { ...data };
     setUploadError(null);
 
     // Convert tags string to array
     if (finalData.tags) {
-        finalData.tags = finalData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+      finalData.tags = finalData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
     } else {
-        finalData.tags = [];
+      finalData.tags = [];
     }
 
     if (imageFile) {
@@ -101,12 +119,30 @@ const EventForm = ({ initialData, onSubmit, isSubmitting, submitButtonText = 'Su
           </div>
 
           <div className="form-group">
-            <label htmlFor="locationText">Địa điểm</label>
-            <input id="locationText" {...register('locationText')} className={errors.locationText ? 'input-error' : ''} />
+            <label htmlFor="locationText">Địa điểm (Tên đường, tòa nhà...)</label>
+            <input id="locationText" {...register('locationText')} className={errors.locationText ? 'input-error' : ''} placeholder="VD: 123 Nguyễn Văn Linh, Đà Nẵng" />
             {errors.locationText && <p className="error-text">{errors.locationText.message}</p>}
+
+            <div className="form-group-row" style={{ marginTop: '0.5rem' }}>
+              <div className="form-group">
+                <label htmlFor="lat">Vĩ độ (Latitude)</label>
+                <input id="lat" type="number" step="any" {...register('lat', { valueAsNumber: true })} /*disabled*/ />
+              </div>
+              <div className="form-group">
+                <label htmlFor="lng">Kinh độ (Longitude)</label>
+                <input id="lng" type="number" step="any" {...register('lng', { valueAsNumber: true })} /*disabled*/ />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button type="button" className="submit-button" onClick={handleUseCurrentLocation} style={{ padding: '0.5rem 0.75rem' }}>Lấy Tọa Độ Hiện Tại</button>
+            </div>
+            <div style={{ marginTop: '0.75rem' }}>
+              <MapEmbed lat={lat} lng={lng} query={!lat && !lng ? 'Hanoi, Vietnam' : null} />
+            </div>
           </div>
 
-           <div className="form-group">
+          <div className="form-group">
             <label htmlFor="tags">Tags (phân cách bởi dấu phẩy)</label>
             <input id="tags" {...register('tags')} placeholder="VD: âm nhạc, công nghệ, workshop" />
           </div>
@@ -117,11 +153,11 @@ const EventForm = ({ initialData, onSubmit, isSubmitting, submitButtonText = 'Su
           <div className="form-group">
             <label>Ảnh bìa</label>
             <div className="image-preview-wrapper">
-                {imagePreview ? (
-                    <img src={imagePreview} alt="Xem trước ảnh bìa" className="image-preview" />
-                ) : (
-                    <div className="image-placeholder"><span>Chưa có ảnh</span></div>
-                )}
+              {imagePreview ? (
+                <img src={imagePreview} alt="Xem trước ảnh bìa" className="image-preview" />
+              ) : (
+                <div className="image-placeholder"><span>Chưa có ảnh</span></div>
+              )}
             </div>
             <input id="image" type="file" accept="image/*" onChange={handleImageChange} className="file-input" />
             {uploadError && <p className="error-text">{uploadError}</p>}

@@ -1,16 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { User, VisibilityStatus } from '@prisma/client';
+import { User, VisibilityStatus, Prisma } from '@prisma/client';
+import { AuditLogsService } from 'src/audit-logs/audit-logs.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private auditLogs: AuditLogsService,
+  ) { }
 
   async create(createPostDto: CreatePostDto, author: User) {
     const { forumTags, ...postData } = createPostDto;
-    // Tạo post trước
+    // Create post first
     const post = await this.prisma.post.create({
       data: {
         ...postData,
@@ -18,17 +22,15 @@ export class PostsService {
       },
     });
 
-    // Gán tag cho post
+    // Assign tags to the post
     if (forumTags && forumTags.length > 0) {
       await Promise.all(
         forumTags.map(async (tagName) => {
-          // Tìm hoặc tạo ForumTag
           const forumTag = await this.prisma.forumTag.upsert({
             where: { name: tagName },
             update: {},
             create: { name: tagName },
           });
-          // Tạo liên kết PostForumTag
           await this.prisma.postForumTag.create({
             data: {
               postId: post.id,
@@ -39,7 +41,6 @@ export class PostsService {
       );
     }
 
-    // Trả về post kèm tag liên kết
     return this.prisma.post.findUnique({
       where: { id: post.id },
       include: {
@@ -60,14 +61,20 @@ export class PostsService {
     });
   }
 
-  findAll(params?: { tag?: string }) {
-    const { tag } = params || {};
-    return this.prisma.post.findMany({
+  async findAll(params?: { tag?: string, sortBy?: string }, userId?: string) {
+    const { tag, sortBy } = params || {};
+    const posts = await this.prisma.post.findMany({
       where: {
         status: VisibilityStatus.VISIBLE,
         ...(tag ? { forumTags: { some: { tag: { name: tag } } } } : {}),
       },
       include: {
+        _count: {
+          select: {
+            comments: true,
+            likes: true,
+          },
+        },
         author: {
           select: {
             id: true,
@@ -81,14 +88,72 @@ export class PostsService {
           },
         },
         forumTags: { select: { tag: true } },
+        likes: userId ? { where: { userId } } : undefined,
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    if (sortBy === 'popular') {
+      return posts.sort((a, b) => {
+        const aPopularity = (a._count.likes || 0) + (a._count.comments || 0);
+        const bPopularity = (b._count.likes || 0) + (b._count.comments || 0);
+        return bPopularity - aPopularity;
+      });
+    }
+
+    return posts;
   }
 
-  async findOne(id: string) {
-    const post = await this.prisma.post.findUnique({
-      where: { id, status: VisibilityStatus.VISIBLE },
+  async findAllForAdmin(page: number, limit: number, search?: string, status?: VisibilityStatus) {
+    const where: Prisma.PostWhereInput = {};
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } },
+        { author: { profile: { displayName: { contains: search, mode: 'insensitive' } } } },
+        { author: { email: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+    if (status) {
+      where.status = status;
+    }
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.post.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          author: {
+            select: {
+              id: true,
+              email: true,
+              profile: {
+                select: {
+                  displayName: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.post.count({ where }),
+    ]);
+
+    return { data, total, page, limit };
+  }
+
+  async findOne(id: string, userId?: string) {
+    const post = await this.prisma.post.findFirst({
+      where: { 
+        id, 
+        OR: [
+          { status: VisibilityStatus.VISIBLE },
+          { authorId: userId }
+        ]
+      },
       include: {
         author: {
           select: {
@@ -119,6 +184,7 @@ export class PostsService {
           },
           orderBy: { createdAt: 'desc' },
         },
+        likes: userId ? { where: { userId } } : undefined,
       },
     });
     if (!post) {
@@ -133,12 +199,13 @@ export class PostsService {
       throw new NotFoundException(`Post with ID "${id}" not found`);
     }
     if (post.authorId !== userId) {
-      throw new NotFoundException(`Post with ID "${id}" not found`); // Or ForbiddenException
+      throw new ForbiddenException('You are not allowed to edit this post');
     }
 
     const { forumTags, ...postData } = updatePostDto;
 
-    // Cập nhật post
+    const oldPost = { ...post };
+
     const updatedPost = await this.prisma.post.update({
       where: { id },
       data: {
@@ -146,20 +213,25 @@ export class PostsService {
       },
     });
 
-    // Xoá tất cả liên kết tag cũ
+    await this.auditLogs.log(
+      userId,
+      'POST_UPDATE',
+      'Post',
+      id,
+      oldPost,
+      updatedPost,
+    );
+
     await this.prisma.postForumTag.deleteMany({ where: { postId: id } });
 
-    // Tạo lại liên kết tag mới
     if (forumTags && forumTags.length > 0) {
       await Promise.all(
         forumTags.map(async (tagName) => {
-          // Tìm hoặc tạo ForumTag
           const forumTag = await this.prisma.forumTag.upsert({
             where: { name: tagName },
             update: {},
             create: { name: tagName },
           });
-          // Tạo liên kết PostForumTag
           await this.prisma.postForumTag.create({
             data: {
               postId: id,
@@ -170,7 +242,6 @@ export class PostsService {
       );
     }
 
-    // Trả về post kèm tag liên kết
     return this.prisma.post.findUnique({
       where: { id },
       include: {
@@ -191,14 +262,41 @@ export class PostsService {
     });
   }
 
+  async updateStatus(postId: string, status: VisibilityStatus, adminId: string) {
+    const post = await this.prisma.post.findUnique({ where: { id: postId } });
+    if (!post) {
+      throw new NotFoundException(`Post with ID "${postId}" not found`);
+    }
+
+    const oldPost = { ...post };
+
+    const updatedPost = await this.prisma.post.update({
+      where: { id: postId },
+      data: { status },
+    });
+
+    await this.auditLogs.log(
+      adminId,
+      status === VisibilityStatus.HIDDEN ? 'POST_HIDE' : 'POST_SHOW',
+      'Post',
+      postId,
+      oldPost,
+      updatedPost,
+    );
+
+    return updatedPost;
+  }
+
   async remove(id: string, userId: string) {
     const post = await this.prisma.post.findUnique({ where: { id } });
     if (!post) {
       throw new NotFoundException(`Post with ID "${id}" not found`);
     }
     if (post.authorId !== userId) {
-      throw new NotFoundException(`Post with ID "${id}" not found`); // Or ForbiddenException
+      throw new ForbiddenException('You are not allowed to delete this post');
     }
+
+    await this.auditLogs.log(userId, 'POST_DELETE', 'Post', id, post, null);
 
     await this.prisma.post.delete({ where: { id } });
     return { message: 'Post deleted successfully' };

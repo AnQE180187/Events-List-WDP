@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Role, WithdrawalStatus, AccountStatus, EventStatus, TransactionStatus, ReportStatus, VisibilityStatus } from '@prisma/client';
+import { Role, WithdrawalStatus, AccountStatus, EventStatus, TransactionStatus, ReportStatus, VisibilityStatus, Prisma } from '@prisma/client';
 import { UsersService } from 'src/users/users.service';
 import { EventsService } from 'src/events/events.service';
 import { PostsService } from 'src/posts/posts.service';
+import { subDays, startOfDay, endOfDay, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 @Injectable()
 export class AdminService {
@@ -15,26 +16,67 @@ export class AdminService {
   ) { }
 
   async getDashboardStats() {
-    const [totalUsers, totalEvents, totalRevenue, totalTransactions, totalPosts, openReports, recentUsers, recentEvents, recentOpenReports, recentActivities] = await this.prisma.$transaction([
+    // Lấy dữ liệu cần thiết song song trong 1 transaction để tăng tốc
+    const [
+      totalUsers,
+      totalEvents,
+      totalTransactions,
+      totalPosts,
+      openReports,
+      recentUsers,
+      recentEvents,
+      recentOpenReports,
+      recentActivities,
+      completedTransactions,
+    ] = await this.prisma.$transaction([
       this.prisma.user.count(),
       this.prisma.event.count(),
-      this.prisma.transaction.aggregate({
-        _sum: { amount: true },
-        where: { status: TransactionStatus.COMPLETED },
-      }),
       this.prisma.transaction.count({ where: { status: TransactionStatus.COMPLETED } }),
       this.prisma.post.count(),
       this.prisma.report.count({ where: { status: ReportStatus.OPEN } }),
-      this.prisma.user.findMany({ orderBy: { createdAt: 'desc' }, take: 5, include: { profile: true } }),
-      this.prisma.event.findMany({ orderBy: { createdAt: 'desc' }, take: 5 }),
-      this.prisma.report.findMany({ where: { status: ReportStatus.OPEN }, orderBy: { createdAt: 'desc' }, take: 5 }),
-      this.prisma.auditLog.findMany({ orderBy: { createdAt: 'desc' }, take: 5, include: { actor: { include: { profile: true } } } }),
+      this.prisma.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: { profile: true },
+      }),
+      this.prisma.event.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
+      this.prisma.report.findMany({
+        where: { status: ReportStatus.OPEN },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
+      this.prisma.auditLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          actor: { include: { profile: true } },
+        },
+      }),
+      this.prisma.transaction.findMany({
+        where: { status: TransactionStatus.COMPLETED },
+        select: { amount: true, orderCode: true },
+      }),
     ]);
+
+    // 🔹 Tính tổng doanh thu đúng theo quy tắc:
+    // - UPG (Upgrade): cộng 100%
+    // - DEP (Deposit): cộng 15%
+    let totalRevenue = 0;
+    for (const tx of completedTransactions) {
+      if (tx.orderCode.startsWith('UPG')) {
+        totalRevenue += tx.amount;
+      } else if (tx.orderCode.startsWith('DEP')) {
+        totalRevenue += tx.amount * 0.15;
+      }
+    }
 
     return {
       totalUsers,
       totalEvents,
-      totalRevenue: totalRevenue._sum.amount || 0,
+      totalRevenue,
       totalTransactions,
       totalPosts,
       openReports,
@@ -43,6 +85,75 @@ export class AdminService {
       recentOpenReports,
       recentActivities,
     };
+  }
+
+  async getRevenueChartData(period: '7d' | '30d' | '12m') {
+    let startDate;
+    const endDate = new Date();
+
+    if (period === '7d') {
+      startDate = subDays(endDate, 6);
+    } else if (period === '30d') {
+      startDate = subDays(endDate, 29);
+    } else if (period === '12m') {
+      startDate = subMonths(endDate, 11);
+    }
+
+    const transactions = await this.prisma.transaction.findMany({
+      where: {
+        status: TransactionStatus.COMPLETED,
+        createdAt: {
+          gte: startOfDay(startDate),
+          lte: endOfDay(endDate),
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    const revenueMap = new Map<string, number>();
+
+    transactions.forEach(tx => {
+      let revenue = 0;
+      if (tx.orderCode.startsWith('UPG')) {
+        revenue = tx.amount;
+      } else if (tx.orderCode.startsWith('DEP')) {
+        revenue = tx.amount * 0.15;
+      }
+
+      if (revenue > 0) {
+        const dateKey = period === '12m'
+          ? tx.createdAt.toISOString().slice(0, 7) // YYYY-MM
+          : tx.createdAt.toISOString().slice(0, 10); // YYYY-MM-DD
+
+        revenueMap.set(dateKey, (revenueMap.get(dateKey) || 0) + revenue);
+      }
+    });
+
+    const result: { date: string; revenue: number }[] = [];
+    if (period === '12m') {
+      for (let i = 11; i >= 0; i--) {
+        const date = subMonths(endDate, i);
+        const dateKey = date.toISOString().slice(0, 7);
+        result.push({
+          date: dateKey,
+          revenue: revenueMap.get(dateKey) || 0
+        });
+      }
+    } else {
+      const days = period === '7d' ? 6 : 29;
+      for (let i = days; i >= 0; i--) {
+        const date = subDays(endDate, i);
+        const dateKey = date.toISOString().slice(0, 10);
+        result.push({
+          date: dateKey,
+          revenue: revenueMap.get(dateKey) || 0
+        });
+      }
+    }
+
+    return result;
   }
 
   async getUsers(
@@ -91,6 +202,11 @@ export class AdminService {
 
   async updatePostStatus(postId: string, status: VisibilityStatus, adminId: string) {
     return this.postsService.updateStatus(postId, status, adminId);
+  }
+
+  async deletePost(postId: string, adminId: string) {
+    // The last argument 'adminId' signifies an admin action, bypassing ownership checks.
+    return this.postsService.remove(postId, null, adminId);
   }
 
   async getWithdrawals(status?: WithdrawalStatus) {

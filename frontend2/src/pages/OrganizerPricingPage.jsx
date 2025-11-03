@@ -15,6 +15,20 @@ const OrganizerPricingPage = () => {
         'Quản lí sự kiện chuyên nghiệp',
       ],
     },
+    {
+      name: 'Gói Premium',
+      price: '250.000',
+      period: 'tháng',
+      popular: true,
+      features: [
+        'Đăng sự kiện không giới hạn',
+        'Ưu tiên hiển thị lên đầu',
+        'Quản lí sự kiện chuyên nghiệp',
+        'Quảng bá trên fanpage',
+        'Xem thống kê doanh thu & xem dữ liệu khách hàng',
+      ],
+    }
+
   ];
 
   return (

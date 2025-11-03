@@ -12,6 +12,7 @@ const UserPricingPage = () => {
       popular: true,
       features: [
         'Truy cập Chatbot AI (Beta)',
+        'Gợi ý sự kiện được cá nhân hóa',
         'Huy hiệu "Người dùng VIP" trên hồ sơ',
       ],
     },
